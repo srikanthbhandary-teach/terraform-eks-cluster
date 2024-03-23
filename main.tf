@@ -30,7 +30,7 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    workernodes = {
+    default_node_group = {
       min_size     = var.min_size
       max_size     = var.max_size
       desired_size = var.desired_size
@@ -39,11 +39,13 @@ module "eks" {
       capacity_type  = var.capacity_type
       labels         = var.tags
 
-      # Remote access cannot be specified with a launch template
-      remote_access = {
-        ec2_ssh_key               = module.key_pair.key_pair_name
-        source_security_group_ids = [aws_security_group.remote_access.id]
-      }
+    # TODO: Remote access cannot be specified with a launch template
+    #   remote_access = {
+    #     ec2_ssh_key               = module.key_pair.key_pair_name
+    #     source_security_group_ids = [aws_security_group.remote_access.id]
+    #   }
+
+    # TODO: work on custom cloud init script
 
       taints = {
       }
@@ -112,7 +114,8 @@ resource "helm_release" "lb" {
   chart      = "aws-load-balancer-controller"
   namespace  = "kube-system"
   depends_on = [
-    kubernetes_service_account.service-account
+    kubernetes_service_account.service-account,
+    module.eks
   ]
 
   set {
